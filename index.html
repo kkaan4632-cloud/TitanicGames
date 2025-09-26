@@ -1,332 +1,191 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="tr">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Brookhaven Gamepass Generator — DEMO (NOT REAL)</title>
+<meta charset="UTF-8">
+<title>Titanik Parçalama Oyunu</title>
 <style>
-  :root{
-    --bg:#0b0f14; --card:#0f161b; --accent:#6f5cff; --accent2:#00d2a1;
-    --muted:#9aa6b2; --danger:#ff6b6b;
-  }
-  *{box-sizing:border-box}
-  body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,-apple-system,'Helvetica Neue',Arial; background:linear-gradient(180deg,#05060a 0%, var(--bg) 100%); color:#e6eef6; min-height:100vh; display:flex; align-items:flex-start; justify-content:center; padding:28px;}
-  .wrap{width:100%;max-width:980px}
-  header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
-  h1{font-size:20px;color:var(--accent);margin:0}
-  .demo-badge{background:var(--danger);color:#111;padding:8px 12px;border-radius:999px;font-weight:700}
-  .subtitle{color:var(--muted);margin:6px 0 18px}
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
-  .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); padding:18px;border-radius:12px;box-shadow:0 8px 30px rgba(2,6,12,0.6);border:1px solid rgba(255,255,255,0.03);cursor:pointer;transition:transform .18s,box-shadow .18s}
-  .card:hover{transform:translateY(-6px);box-shadow:0 18px 40px rgba(0,0,0,0.65)}
-  .gamepass-title{font-size:16px;color:#fff;margin:0 0 6px}
-  .gamepass-desc{color:var(--muted);font-size:13px;margin:0}
-  .big-area{margin-top:18px;background:rgba(255,255,255,0.02);padding:18px;border-radius:12px}
-  .center{display:flex;align-items:center;justify-content:center}
-  /* Modal */
-  .modal-back{position:fixed;inset:0;background:rgba(2,6,12,0.6);display:none;align-items:center;justify-content:center;padding:20px;z-index:50}
-  .modal{width:100%;max-width:520px;background:linear-gradient(180deg,#071018,#0d1a22);padding:20px;border-radius:12px;border:1px solid rgba(255,255,255,0.04)}
-  label{font-size:13px;color:var(--muted);display:block;margin-bottom:8px}
-  input[type=text]{width:100%;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:rgba(255,255,255,0.02);color:#fff}
-  .row{display:flex;gap:8px;margin-top:12px}
-  button.primary{background:linear-gradient(90deg,var(--accent),#a888ff);border:none;color:#08111a;padding:10px 14px;border-radius:10px;cursor:pointer;font-weight:700;flex-shrink:0}
-  button.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted);padding:10px 12px;border-radius:10px;cursor:pointer}
-  /* loader */
-  .loaderbox{height:120px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px}
-  .progress{width:80%;height:14px;background:rgba(255,255,255,0.04);border-radius:999px;overflow:hidden}
-  .bar{height:100%;width:0%;background:linear-gradient(90deg,var(--accent2),#7af0d0)}
-  .status{color:var(--muted);font-size:14px}
-  /* result */
-  .result{padding:14px;border-radius:10px;margin-top:12px;background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);border:1px solid rgba(255,255,255,0.03)}
-  .success{color:var(--accent2);font-weight:800}
-  .fail{color:var(--danger);font-weight:800}
-  .confetti{position:fixed;left:0;right:0;top:0;pointer-events:none;height:0;z-index:60}
-  footer{margin-top:18px;color:var(--muted);font-size:13px;text-align:center}
-  /* small screens */
-  @media(max-width:520px){ .grid{grid-template-columns:1fr} .card{padding:14px} }
+  body { margin:0; background: #111; color: white; font-family: Arial; overflow: hidden; }
+  canvas { display: block; margin: auto; touch-action: none; border: 2px solid white; }
+  #controls { padding: 10px; text-align: center; }
+  button { margin: 5px; padding: 10px; font-size: 16px; border-radius: 8px; cursor: pointer; }
+  #score { font-size: 18px; margin: 10px; text-align: center; }
+  footer { text-align: center; margin-top: 10px; font-size: 14px; color: #bbb; }
 </style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <div>
-        <h1>Brookhaven Gamepass Generator <span style="font-size:12px;color:var(--muted)">— DEMO</span></h1>
-        <div class="subtitle">Gerçek değil — yalnızca video/demo amaçlıdır. Hiçbir gerçek gamepass verilmez.</div>
-      </div>
-      <div class="center">
-        <div class="demo-badge">DEMO / PRANK</div>
-      </div>
-    </header>
-
-    <section class="grid" id="catalog">
-      <!-- Gamepass kartları (JS ile doldurulacak) -->
-    </section>
-
-    <div class="big-area center" style="margin-top:18px">
-      <div style="max-width:920px;width:100%">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
-          <div style="flex:1">
-            <strong style="display:block;color:#fff">Seçilen:</strong>
-            <div id="selectedLabel" style="color:var(--muted)">Henüz bir gamepass seçilmedi</div>
-          </div>
-          <div style="display:flex;gap:8px">
-            <button class="ghost" id="howBtn">Nasıl Çalışır?</button>
-            <button class="primary" id="openBtn" disabled>Seç ve Gönder (Demo)</button>
-          </div>
-        </div>
-
-        <div id="demoLog" style="margin-top:12px;color:var(--muted)">Video için: seçtikten sonra "Seç ve Gönder"e bas, 10-15s bekle ve sonucu kaydet.</div>
-      </div>
-    </div>
-
-    <footer>
-      Bu sayfa yalnızca gösteri amaçlıdır. Gerçek gamepass verilmez veya satılmaz.
-    </footer>
-  </div>
-
-  <!-- Modal: kullanıcı adı + generate -->
-  <div class="modal-back" id="modalBack" aria-hidden="true">
-    <div class="modal" role="dialog" aria-modal="true">
-      <h3 id="modalTitle">Gamepass Gönderimi (Demo)</h3>
-      <p style="color:var(--muted);margin-top:6px">Seçilen: <b id="modalSelected" style="color:#fff"></b></p>
-
-      <label for="username">Kullanıcı adı (roblox nick) *</label>
-      <input id="usernameInput" type="text" placeholder="Örn: NeonPlayer123" autocomplete="off"/>
-
-      <div class="row">
-        <button class="primary" id="generateBtn">Seç ve Gönder</button>
-        <button class="ghost" id="cancelBtn">İptal</button>
-      </div>
-
-      <div id="processArea" style="margin-top:12px;display:none">
-        <div class="loaderbox">
-          <div class="status" id="processStatus">Doğrulanıyor...</div>
-          <div class="progress"><div class="bar" id="progressBar"></div></div>
-          <div style="display:flex;gap:8px">
-            <button class="ghost" id="stopBtn">Durdur</button>
-          </div>
-        </div>
-      </div>
-
-      <div id="resultArea" style="display:none">
-        <div class="result" id="resultBox"></div>
-        <div style="display:flex;gap:8px;margin-top:10px">
-          <button class="primary" id="closeResult">Kapat</button>
-          <button class="ghost" id="copyCode">Video kodu kopyala</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="confetti" id="confetti"></div>
+<h1 style="text-align:center;">🚢 Titanic Parçalama Oyunu</h1>
+<div id="controls">
+<button onclick="setMode('patlat')">💥 Patlat</button>
+<button onclick="setMode('kes')">✂️ Kes</button>
+<button onclick="setMode('del')">🕳️ Delik Aç</button>
+<button onclick="setMode('lazer')">🔫 Lazer</button>
+<button onclick="setMode('atom')">☢️ Atom Bombası</button>
+<button onclick="sinkShip()">🌊 Batır</button>
+<button onclick="repairShip()">🔧 Onar</button>
+</div>
+<div id="score">Skor: 0</div>
+<canvas id="gameCanvas" width="800" height="450"></canvas>
+<footer>ADABAŞI İHO ÖĞRENCİSİ TARAFINDAN YAPILMIŞTIR – TELİF HAKLARI <b>KORAY KAAN KARTAL</b>’A AİTTİR VE <b>EMİR</b>’İN EMEĞİ VARDIR</footer>
 
 <script>
-/*
-  DEMO generator script
-  - Bu dosya SADECE DEMO amaçlıdır (NOT REAL). Hiçbir gerçek işlem yapmaz.
-  - Video çekerken "gerçekmiş" gibi göstermek için tasarlanmıştır.
-*/
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
 
-/* --- CONFIG: istediğin gamepass listesini buradan düzenle --- */
-const GAMEPASSES = [
-  {id:'gp_vip', title:'VIP Access', desc:'VIP özellikleri açar (demo)', fakeCodePrefix:'VIP-', preview:'⭐'},
-  {id:'gp_car', title:'Premium Car', desc:'Özel araç paketi (demo)', fakeCodePrefix:'CAR-'},
-  {id:'gp_house', title:'Luxury House', desc:'Lüks ev paketi (demo)', fakeCodePrefix:'HSE-'},
-  {id:'gp_horse', title:'Horse Rider', desc:'At binme izni (demo)', fakeCodePrefix:'HOR-'},
-  {id:'gp_pet', title:'Cute Pet', desc:'Sevimli evcil hayvan (demo)', fakeCodePrefix:'PET-'},
-  {id:'gp_wings', title:'Angel Wings', desc:'Kanat görünümü (demo)', fakeCodePrefix:'WNG-'}
-];
-/* ---------- */
+let damages = [];
+let mode = "patlat";
+let score = 0;
+let shipY = 200;
+let sinking = false;
+let waterOffset = 0;
+let shipPieces = [{x:200, y:200, w:400, h:100, vx:0, vy:0, broken:false}];
 
-const catalog = document.getElementById('catalog');
-const selectedLabel = document.getElementById('selectedLabel');
-const openBtn = document.getElementById('openBtn');
-const modalBack = document.getElementById('modalBack');
-const modalSelected = document.getElementById('modalSelected');
-const usernameInput = document.getElementById('usernameInput');
-const generateBtn = document.getElementById('generateBtn');
-const cancelBtn = document.getElementById('cancelBtn');
-const processArea = document.getElementById('processArea');
-const resultArea = document.getElementById('resultArea');
-const processStatus = document.getElementById('processStatus');
-const progressBar = document.getElementById('progressBar');
-const resultBox = document.getElementById('resultBox');
-const closeResult = document.getElementById('closeResult');
-const copyCodeBtn = document.getElementById('copyCode');
-const stopBtn = document.getElementById('stopBtn');
-const howBtn = document.getElementById('howBtn');
+const shipImg = new Image();
+shipImg.src = "https://i.ibb.co/2qV6S3L/titanic.png";
 
-let chosen = null;
-let progressInterval = null;
-let progressValue = 0;
-let fakeResult = null;
+// Kontrol seçimi
+function setMode(m){ mode=m; }
 
-/* render katalog */
-function renderCatalog(){
-  catalog.innerHTML = GAMEPASSES.map(g => `
-    <div class="card" data-id="${g.id}">
-      <div style="font-size:26px;margin-bottom:8px">${g.preview || '🎁'}</div>
-      <h3 class="gamepass-title">${g.title}</h3>
-      <p class="gamepass-desc">${g.desc}</p>
-    </div>
-  `).join('');
+// Pozisyon alma (dokunmatik + fare)
+function getPos(e){
+  const rect=canvas.getBoundingClientRect();
+  if(e.touches) return {x:e.touches[0].clientX-rect.left, y:e.touches[0].clientY-rect.top};
+  return {x:e.clientX-rect.left, y:e.clientY-rect.top};
+}
 
-  // click handlers
-  document.querySelectorAll('.card').forEach(el=>{
-    el.addEventListener('click', ()=>{
-      const id = el.dataset.id;
-      chooseById(id);
+// Saldırı uygulama
+function attack(x,y){
+  if(sinking) return;
+  damages.push({type:mode, x:x, y:y});
+  score += (mode==="atom")?10:1;
+  document.getElementById("score").innerText="Skor: "+score;
+
+  if(mode==="atom"){
+    for(let i=0;i<15;i++){
+      damages.push({type:"patlat", x:x+Math.random()*200-100, y:y+Math.random()*100-50});
+    }
+    shipPieces.forEach(p=>p.broken=true);
+  } else if(mode==="kes"){
+    shipPieces.forEach(p=>{
+      if(!p.broken && x>p.x && x<p.x+p.w && y>p.y && y<p.y+p.h){
+        p.broken=true;
+        p.vx=(Math.random()*4-2);
+        p.vy=(Math.random()*-3);
+      }
     });
+  }
+  drawScene();
+}
+
+canvas.addEventListener("click", e=>attack(getPos(e).x,getPos(e).y));
+canvas.addEventListener("touchstart", e=>{ e.preventDefault(); attack(getPos(e).x,getPos(e).y); });
+
+// Çizim fonksiyonu
+function drawScene(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  // Gökyüzü
+  ctx.fillStyle="#0b0b30";
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  // Dalgalı deniz
+  ctx.fillStyle="#1e90ff";
+  ctx.beginPath();
+  ctx.moveTo(0, canvas.height*0.7);
+  for(let i=0;i<=canvas.width;i++){
+    ctx.lineTo(i, canvas.height*0.7 + Math.sin((i+waterOffset)/20)*10);
+  }
+  ctx.lineTo(canvas.width, canvas.height);
+  ctx.lineTo(0, canvas.height);
+  ctx.closePath();
+  ctx.fill();
+  waterOffset += 1;
+
+  // Gemi parçaları
+  shipPieces.forEach(p=>{
+    if(p.broken){
+      p.vy +=0.1; // yerçekimi
+      p.y+=p.vy;
+      p.x+=p.vx;
+    }
+    ctx.drawImage(shipImg, p.x, p.y, p.w, p.h);
+  });
+
+  // Hasar efektleri
+  damages.forEach(d=>{
+    if(d.type==="patlat"){
+      ctx.beginPath();
+      ctx.arc(d.x,d.y,20,0,Math.PI*2);
+      ctx.fillStyle="red";
+      ctx.fill();
+      ctx.strokeStyle="yellow";
+      ctx.stroke();
+    }
+    else if(d.type==="kes"){
+      ctx.beginPath();
+      ctx.moveTo(d.x-50,d.y-50);
+      ctx.lineTo(d.x+50,d.y+50);
+      ctx.strokeStyle="white";
+      ctx.lineWidth=3;
+      ctx.stroke();
+    }
+    else if(d.type==="del"){
+      ctx.beginPath();
+      ctx.arc(d.x,d.y,12,0,Math.PI*2);
+      ctx.fillStyle="black";
+      ctx.fill();
+    }
+    else if(d.type==="lazer"){
+      ctx.beginPath();
+      ctx.moveTo(d.x,0);
+      ctx.lineTo(d.x,canvas.height);
+      ctx.strokeStyle="lime";
+      ctx.lineWidth=3;
+      ctx.stroke();
+    }
+    else if(d.type==="atom"){
+      ctx.beginPath();
+      ctx.arc(d.x,d.y,30,0,Math.PI*2);
+      ctx.fillStyle="orange";
+      ctx.fill();
+      ctx.strokeStyle="red";
+      ctx.stroke();
+      // Ekran sallama
+      const shakeX=Math.random()*6-3;
+      const shakeY=Math.random()*6-3;
+      ctx.translate(shakeX,shakeY);
+      setTimeout(()=>{ctx.setTransform(1,0,0,1,0,0);},50);
+    }
   });
 }
-renderCatalog();
 
-function chooseById(id){
-  const g = GAMEPASSES.find(x=>x.id===id);
-  if(!g) return;
-  chosen = g;
-  selectedLabel.innerText = `${g.title} — ${g.desc}`;
-  openBtn.disabled = false;
+// Onar butonu
+function repairShip(){
+  damages=[];
+  score=0;
+  shipY=200;
+  sinking=false;
+  shipPieces=[{x:200, y:200, w:400, h:100, vx:0, vy:0, broken:false}];
+  document.getElementById("score").innerText="Skor: 0";
+  drawScene();
 }
 
-/* open modal */
-openBtn.addEventListener('click', ()=>{
-  if(!chosen) return;
-  modalSelected.innerText = chosen.title;
-  usernameInput.value = '';
-  resultArea.style.display='none';
-  processArea.style.display='none';
-  modalBack.style.display = 'flex';
-  modalBack.setAttribute('aria-hidden','false');
-  usernameInput.focus();
-});
-
-/* cancel */
-cancelBtn.addEventListener('click', closeModal);
-closeResult.addEventListener('click', closeModal);
-function closeModal(){
-  stopProcess();
-  modalBack.style.display='none';
-  modalBack.setAttribute('aria-hidden','true');
+// Batırma animasyonu
+function sinkShip(){
+  if(sinking) return;
+  sinking=true;
+  const sinkInterval=setInterval(()=>{
+    shipPieces.forEach(p=>p.y+=3);
+    drawScene();
+    if(shipPieces.every(p=>p.y>canvas.height)){clearInterval(sinkInterval);}
+  },60);
 }
 
-/* stop */
-stopBtn.addEventListener('click', ()=>{
-  stopProcess();
-  processStatus.innerText = 'İptal edildi.';
-});
-
-/* how */
-howBtn.addEventListener('click', ()=>{
-  alert('Bu bir DEMO\'dur. Gerçek gamepass verilmez. Video çekmek için tasarlanmıştır. Seç → kullanici adı → Seç ve Gönder → bekle → sonuç görüntüle.');
-});
-
-/* generate flow */
-generateBtn.addEventListener('click', ()=>{
-  const user = usernameInput.value.trim();
-  if(!user){ alert('Lütfen kullanıcı adını gir.'); usernameInput.focus(); return; }
-  // başlangıç: hide result, show process
-  resultArea.style.display='none';
-  processArea.style.display='block';
-  progressValue = 0;
-  progressBar.style.width = '0%';
-  processStatus.innerText = 'Doğrulanıyor...';
-  // fake server checks: step messages array
-  const steps = [
-    'Bağlantı kuruluyor...',
-    'Kullanıcı doğrulanıyor...',
-    'Gamepass doğrulanıyor...',
-    'Transfer hazırlığı...',
-    'İşlem gerçekleştiriliyor...'
-  ];
-  let stepIndex = 0;
-  // start progress
-  progressInterval = setInterval(()=>{
-    progressValue += Math.random()*7 + 3; // hızlılık
-    if(progressValue>=100) progressValue = 100;
-    progressBar.style.width = progressValue + '%';
-    // when progress hits some thresholds update step message
-    if(progressValue > (stepIndex+1)*18 && stepIndex < steps.length-1){
-      stepIndex++;
-      processStatus.innerText = steps[stepIndex];
-    }
-    // finish
-    if(progressValue >= 100){
-      clearInterval(progressInterval); progressInterval=null;
-      // small delay then show result
-      setTimeout(()=>showResult(user), 600 + Math.floor(Math.random()*900));
-    }
-  }, 250);
-});
-
-/* show result (always demo) */
-function showResult(user){
-  processArea.style.display='none';
-  resultArea.style.display='block';
-  // Fake success or fail (for video you can toggle)
-  const success = true; // set true = success; false = fail
-  if(success){
-    // make a fake code to display
-    const code = `${chosen.fakeCodePrefix}${Math.random().toString(36).slice(2,8).toUpperCase()}`;
-    fakeResult = {type:'success', text:`${chosen.title} adlı gamepass "${user}" kullanıcısına gönderildi. (DEMO)`, code};
-    resultBox.innerHTML = `<div class="success">✅ Başarılı — DEMO</div>
-      <div style="margin-top:8px;color:var(--muted)">${fakeResult.text}</div>
-      <div style="margin-top:8px;font-weight:800;color:#fff">Video Kod: <span style="background:rgba(255,255,255,0.04);padding:6px;border-radius:8px;margin-left:8px">${code}</span></div>`;
-    // little confetti effect
-    playConfetti();
-  } else {
-    fakeResult = {type:'fail', text:'İşlem başarısız oldu. Lütfen tekrar deneyin.'};
-    resultBox.innerHTML = `<div class="fail">❌ Hata</div><div style="margin-top:8px;color:var(--muted)">${fakeResult.text}</div>`;
-  }
+// Ana animasyon
+function animate(){
+  drawScene();
+  requestAnimationFrame(animate);
 }
-
-/* copy code */
-copyCodeBtn.addEventListener('click', ()=>{
-  if(!fakeResult || !fakeResult.code){ alert('Kopyalanacak kod yok.'); return; }
-  navigator.clipboard?.writeText(fakeResult.code).then(()=>alert('Kod kopyalandı: ' + fakeResult.code)).catch(()=>alert('Kopyalama başarısız.'));
-});
-
-/* stop process helper */
-function stopProcess(){
-  if(progressInterval){ clearInterval(progressInterval); progressInterval=null; }
-  processArea.style.display='none';
-  resultArea.style.display='none';
-}
-
-/* confetti (simple) */
-function playConfetti(){
-  const c = document.getElementById('confetti');
-  c.innerHTML = '';
-  const count = 24;
-  for(let i=0;i<count;i++){
-    const el = document.createElement('div');
-    el.style.position='absolute';
-    el.style.left = (Math.random()*100) + '%';
-    el.style.top = '-20px';
-    el.style.width = (6 + Math.random()*12) + 'px';
-    el.style.height = (10 + Math.random()*18) + 'px';
-    el.style.background = ['#ffca3a','#8ac926','#1982c4','#6a4c93','#ff6b6b'][Math.floor(Math.random()*5)];
-    el.style.opacity = 0.95;
-    el.style.transform = 'rotate('+ (Math.random()*360) +'deg)';
-    el.style.borderRadius = '2px';
-    el.style.transition = 'transform 2.2s linear, top 2.2s ease-in, opacity 2.2s linear';
-    c.appendChild(el);
-    // animate
-    setTimeout(()=>{ el.style.top = (80 + Math.random()*30) + '%'; el.style.transform = 'rotate('+ (Math.random()*1080) +'deg)'; el.style.opacity='0.0'; }, 80 + i*40);
-    setTimeout(()=>el.remove(), 2600);
-  }
-}
-
-/* keyboard: enter triggers generate when modal open */
-usernameInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter') generateBtn.click(); });
-
-/* close modal if background clicked */
-modalBack.addEventListener('click', (e)=>{ if(e.target === modalBack) closeModal(); });
-
-/* init */
-(function init(){
-  renderCatalog();
-})();
+animate();
 </script>
 </body>
 </html>
